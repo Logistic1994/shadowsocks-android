@@ -22,4 +22,15 @@
                                                             android:src="@drawable/ic_start_idle"
                                                             app:pressedTranslationZ="6dp" app:borderWidth="0dp" />
     </com.github.jorgecastilloprz.FABProgressCircle>
+    <Button
+        android:id="@+id/autoFecthButton"
+        android:text="AUTO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/fabProgressCircle"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="@dimen/fab_margin_bottom"/>
 </RelativeLayout>

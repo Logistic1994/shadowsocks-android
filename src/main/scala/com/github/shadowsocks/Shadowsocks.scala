@@ -38,10 +38,11 @@
  */
 package com.github.shadowsocks
 
-import java.io.{FileOutputStream, IOException, InputStream, OutputStream}
+import java.io.{BufferedReader, FileOutputStream, IOException, InputStream, InputStreamReader, OutputStream}
+import java.net.{HttpURLConnection, URL}
 import java.util
 import java.util.Locale
-
+import java.util.Random
 import android.app.backup.BackupManager
 import android.app.{Activity, ProgressDialog}
 import android.content._
@@ -343,9 +344,45 @@ class Shadowsocks
   }
 
   override def onCreate(savedInstanceState: Bundle) {
-
+    
     super.onCreate(savedInstanceState)
     setContentView(R.layout.layout_main)
+    val autoFetchButton = findViewById(R.id.autoFecthButton).asInstanceOf[Button]
+    autoFetchButton.setOnClickListener((v: View) => {
+      ThrowableFuture {
+        try {
+          val connection = new URL("http://www.ishadowsocks.com").openConnection().asInstanceOf[HttpURLConnection]
+          connection.setConnectTimeout(5000)
+          connection.setReadTimeout(1000)
+          connection.setRequestMethod("GET")
+          connection.connect()
+          val is = connection.getInputStream
+          val bufferedReader = new BufferedReader(new InputStreamReader(is))
+          val str2 = Stream.continually(bufferedReader.readLine()).takeWhile(_ != null)
+          val str = str2.mkString
+          val regexServer = """服务器地址:([\w.]*)<""".r
+          val regexPassword = """密码:(\d*)<""".r
+          val resServers = regexServer.findAllIn(str)
+          val resPasswords = regexPassword.findAllIn(str)
+          if (resServers.nonEmpty && resPasswords.nonEmpty) {
+            val server = resServers.group(1)
+            val pass = resPasswords.group(1)
+            handler.post(() => {
+              preferences.setPref(server, pass)
+              Toast.makeText(this, server + ":" + pass, Toast.LENGTH_SHORT).show()
+            })
+          } else {
+            handler.post(() => {
+              Toast.makeText(this, "无法获取服务器和密码", Toast.LENGTH_SHORT).show()
+            })
+          }
+        } catch {
+          case _: Throwable => handler.post(() => {
+              Toast.makeText(this, "网络连接中出现错误", Toast.LENGTH_SHORT).show()
+            })
+        }
+      }
+    })
     // Initialize Toolbar
     val toolbar = findViewById(R.id.toolbar).asInstanceOf[Toolbar]
     toolbar.setTitle(getString(R.string.screen_name))
@@ -377,11 +414,7 @@ class Shadowsocks
     })
     updateTraffic(0, 0, 0, 0)
 
-    bindToService()
-  }
-
-  // Bind to the service
-  def bindToService() {
+    // Bind to the service
     handler.post(() => attachService)
   }
 
@@ -458,11 +491,11 @@ class Shadowsocks
   private def updatePreferenceScreen() {
     val profile = currentProfile
     if (profile.host == "198.199.101.152") if (adView == null) {
-      adView = new AdView(this)
-      adView.setAdUnitId("ca-app-pub-9097031975646651/7760346322")
-      adView.setAdSize(AdSize.SMART_BANNER)
-      preferences.getView.asInstanceOf[ViewGroup].addView(adView, 0)
-      adView.loadAd(new AdRequest.Builder().build())
+      // adView = new AdView(this)
+      // adView.setAdUnitId("ca-app-pub-9097031975646651/7760346322")
+      // adView.setAdSize(AdSize.SMART_BANNER)
+      // preferences.getView.asInstanceOf[ViewGroup].addView(adView, 0)
+      // adView.loadAd(new AdRequest.Builder().build())
     } else adView.setVisibility(View.VISIBLE) else if (adView != null) adView.setVisibility(View.GONE)
 
     preferences.update(profile)

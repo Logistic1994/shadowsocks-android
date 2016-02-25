@@ -12,6 +12,7 @@ import android.preference.{Preference, PreferenceFragment, SwitchPreference}
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.webkit.{WebView, WebViewClient}
+import android.util.Log
 import com.github.shadowsocks.database.Profile
 import com.github.shadowsocks.preferences._
 import com.github.shadowsocks.utils.CloseUtils._
@@ -190,6 +191,12 @@ class ShadowsocksSettings extends PreferenceFragment with OnSharedPreferenceChan
         activity.attachService
       })
       stat.setSummary(if (ShadowsocksApplication.isVpnEnabled) getString(R.string.connection_test_pending) else null)
+    case Key.proxy => 
+      val proxyStr = sharedPreferences.getString(Key.proxy, "")
+      findPreference(Key.proxy).asInstanceOf[SummaryEditTextPreference].setText(proxyStr)
+    case Key.sitekey =>
+      val sitekeyStr = sharedPreferences.getString(Key.sitekey, "")
+      findPreference(Key.sitekey).asInstanceOf[PasswordEditTextPreference].setText(sitekeyStr)
     case _ =>
   }
 
@@ -217,5 +224,11 @@ class ShadowsocksSettings extends PreferenceFragment with OnSharedPreferenceChan
       val pref = findPreference(name)
       updatePreference(pref, name, profile)
     }
+  }
+
+  def setPref(server: String, pass: String) {
+    Log.e("sos", "in setPref function")
+    findPreference(Key.proxy).getEditor().putString(Key.proxy, server).apply();
+    findPreference(Key.sitekey).getEditor().putString(Key.sitekey, pass).apply();
   }
 }
